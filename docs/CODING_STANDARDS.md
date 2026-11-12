@@ -13,7 +13,7 @@
 - No hard-coded catalog names. 
   The catalog (brisbane_housing_dev / brisbane_housing_prod) is passed in as a parameter, so the same code runs in DEV and PROD.
 
-## Pyspark
+## PySpark
 - Transformation functions take a DataFrame and return a DataFrame. That keeps them testable.
 - No `.cache()`: it isn’t supported on serverless.
 - No `.collect()` / `.toPandas()` on large data.
