@@ -2,12 +2,16 @@ import logging
 
 
 def setup_logging(level: str = "INFO") -> None:
-    """This is a common function for logging which must be used across all other modules/functions.
-    The function is safe to be called twice
+    """Configure logging for the brisbane_house_finder package.
+
+    Adds one stream handler to the package logger with the format
+    "time | level | logger name | message". The root logger is not changed,
+    and log lines are not passed up to it. Safe to call more than once: a
+    second call updates the level but does not add another handler.
+
     Args:
-        level: logging level (INFO, WARNING, ERROR)
-    Returns:
-        None"""
+        level: Minimum level to show: "DEBUG", "INFO", "WARNING" or "ERROR".
+    """
 
     logger = logging.getLogger("brisbane_house_finder")
     logger.setLevel(level)
