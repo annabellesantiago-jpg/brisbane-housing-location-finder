@@ -88,7 +88,7 @@
 Each factor is added as its own stage. Every stage runs Bronze → Silver → Gold for its datasets and ends with a working, updated score.
 
 ### Step 0 — Foundations
-- **Deliverables:** GitHub repo in a Databricks Git Folder; repo skeleton; Unity Catalog catalog, schemas (`landing`, `bronze`, `silver`, `gold`, `ops`) and landing Volume; coding standards (PEP 8, logging, error handling); pytest; GitHub Actions running lint and unit tests; one test Genie space to confirm Free Edition support; service principal test (create, OAuth secret, job run-as, grants).
+- **Deliverables:** GitHub repo in a Databricks Git Folder; repo skeleton; Unity Catalog catalog, schemas (`landing`, `bronze`, `silver`, `gold`, `ops`) and landing Volume; coding standards (PEP 8, logging, error handling); pytest; GitHub Actions running lint and unit tests; one test Genie space to confirm Free Edition support; service principal test (create, OAuth secret, job run-as, grants). **Both passed 6 Nov 2026.**
 - **Decisions:** catalog layout (decided: `brisbane_housing_dev` / `brisbane_housing_prod`); repo name (decided: `brisbane-housing-location-finder`); branching (decided).
 
 ### Stage 1 — Flood + amenities (MVP)
@@ -148,7 +148,7 @@ feature/<name>  ──PR──►  dev  ──PR──►  main
 | GitHub Actions → Databricks (deploy, and later the public-page export) | Service principal with OAuth machine-to-machine credentials in GitHub Secrets, instead of a personal access token |
 | DEV target | Developer's own identity (normal for development) |
 
-**To verify in Step 0:** that Free Edition lets the workspace admin create a service principal, generate its OAuth secret, and set it as a job's "run as". The docs say workspace admins can add service principals from workspace admin settings; Free Edition has no account console. If any part is not possible, record it as a known limitation and an Architecture Decision Record.
+**Verified 6 Nov 2026:** Free Edition lets the workspace admin create a service principal, generate its OAuth secret, and set it as a job's "run as" (after granting yourself the Service Principal User role). The docs say workspace admins can add service principals from workspace admin settings; Free Edition has no account console. If any part is not possible, record it as a known limitation and an Architecture Decision Record.
 
 ---
 
@@ -181,7 +181,7 @@ feature/<name>  ──PR──►  dev  ──PR──►  main
 |---|---|---|
 | B1 | Ingestion approach | (a) PySpark + Auto Loader · (b) Lakeflow Spark Declarative Pipelines · (c) `COPY INTO` |
 | B2 | Catalog | **Decided 9 Oct 2026:** two catalogs, `brisbane_housing_dev` and `brisbane_housing_prod`, each with schemas `landing`, `bronze`, `silver`, `gold`, `ops` |
-| B3 | Landing folder convention | e.g. `<publisher>/<dataset>/<YYYY-MM-DD>/<file>` |
+| B3 | Landing folder convention | **Decided 6 Nov 2026:** `raw_files/<dataset_id>/<download_date YYYY-MM-DD>/<original file name>`; `dataset_id` = manifest id = Bronze table name |
 | B4 | Geometry in Bronze | raw GeoJSON text (parse in Silver) vs parsed `GEOMETRY` column |
 | B5 | Column naming | keep source names vs normalise to snake_case |
 | B6 | Audit columns | source file, file modified time, ingest timestamp, run ID, download date |
@@ -208,6 +208,8 @@ feature/<name>  ──PR──►  dev  ──PR──►  main
 | 2026-10-09 | Overland Flow layer skipped for now: 1,256,924 shapes; the GeoJSON export fails on the council site. Deferred until after the 28 Feb deadline. Dashboard must state that overland (heavy-rain street) flooding is not included. |
 | 2026-11-03 | Source ingestion is hybrid: static sources (suburbs, flood layers, schools, health facilities, OpenStreetMap) are downloaded by hand and uploaded to the landing volume; sources that change regularly (QPS crime, monthly; Translink GTFS) are pulled by REST/HTTP code run by a Lakeflow Job. Before Stage 2, test whether Free Edition serverless can reach those hosts; if not, the download code runs outside Databricks (PC or GitHub Actions) and uploads with the CLI. |
 | 2026-11-03 | Catalogs, schemas and the landing volume are created by an idempotent SQL script (`setup/01_unity_catalog_setup.sql`), not by the bundle: bundle-managed schemas are dropped with their tables on `bundle destroy`, rename or removal from `databricks.yml`. The bundle (Step 6) manages jobs, pipelines, dashboard and Genie space only. |
+| 2026-11-06 | B3 landing convention: `/Volumes/<catalog>/landing/raw_files/<dataset_id>/<download_date>/<original file name>`. Each download kept; Bronze records the source path. |
+| 2026-11-06 | Feasibility tests passed on Free Edition: (1) Genie Agent (formerly Genie space) answers questions over a UC table using the Serverless Starter Warehouse; (2) service principal `sp-brisbane-housing-prod` (Application ID 6989ab95-54a7-40e4-925a-00d7af94c1e2) created from workspace settings, OAuth secret generated, `GRANT USE CATALOG` on `brisbane_housing_prod` succeeded, and a job ran successfully with Run as = the service principal. Note: the creator gets the Service Principal Manager role only; the Service Principal User role must be granted explicitly before Run as can be set. |
 | 2026-10-06 | Service principals, not personal accounts, own PROD jobs and hold PROD data access; GitHub Actions authenticates as a service principal. To verify on Free Edition in Step 0. |
 | 2026-10-06 | DE Associate exam 20–25 Oct 2026; project work starts after the exam (26 Oct). |
 | 2026-10-06 | Public serving: static GitHub Pages site with filters and weight sliders, plus a CSV download for visitors to use with their own AI tool. No hosted chatbot. |
