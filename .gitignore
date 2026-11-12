@@ -1,0 +1,24 @@
+# -- ignore python virtual environment --
+.venv/
+venv/
+
+# -- ignore python caches
+__pycache__/
+*.pyc
+*.pyo
+
+# -- ignore python secrets
+.env, .databrickscfg
+
+# -- ignore bundle local state
+.databricks/
+
+# -- ignore raw data files
+*.geojson, *.parquet, *.csv
+
+# -- ignore VS Code and OS files
+.vscode/
+.DS_Store
+Thumbs.db
+Thumbs.db:encryptable
+desktop.ini
