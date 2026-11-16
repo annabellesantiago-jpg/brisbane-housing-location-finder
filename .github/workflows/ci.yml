@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [dev, main]
+
+job:
+  # ─────────────────────────────────────────────────────────────────────
+  # Job 1: lint and test (pytest)
+  # Runs on every PR. No secrets required — all external
+  # ─────────────────────────────────────────────────────────────────────
+  lint-and-tests:
+    runs-on: ubuntu-latest
+
+    # env:
+      # Dummy values so ingestion/config.py doesn't crash on import.
+      # Tests mock all external calls — these are never used for real.
+      # S3_BUCKET: ci-dummy-bucket
+      # AWS_REGION: ap-southeast-2
+      # AWS_ACCESS_KEY_ID: FAKE_KEY
+      # AWS_SECRET_ACCESS_KEY: FAKE_SECRET
+      # DATABRICKS_HOST: dummy.databricks.com
+      # DATABRICKS_TOKEN: dapi_fake_token
+      # DATABRICKS_HTTP_PATH: /sql/1.0/warehouses/fake
+      # DATABRICKS_CATALOG: market_risk_dev
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Run Linting Test
+        run: ruff check .
+
+      - name: Run Python unit tests
+        run: python -m pytest tests/ -v --tb=short
+
