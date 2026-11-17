@@ -179,14 +179,14 @@ feature/<name>  ──PR──►  dev  ──PR──►  main
 
 | # | Decision | Options |
 |---|---|---|
-| B1 | Ingestion approach | (a) PySpark + Auto Loader · (b) Lakeflow Spark Declarative Pipelines · (c) `COPY INTO` |
+| B1 | Ingestion approach | **Decided 16 Nov 2026:** PySpark + Auto Loader (`cloudFiles`, `availableNow`), run as a Lakeflow Job task; transformation logic in the `brisbane_house_finder` package with pytest. SDP considered for Silver. |
 | B2 | Catalog | **Decided 9 Oct 2026:** two catalogs, `brisbane_housing_dev` and `brisbane_housing_prod`, each with schemas `landing`, `bronze`, `silver`, `gold`, `ops` |
 | B3 | Landing folder convention | **Decided 6 Nov 2026:** `raw_files/<dataset_id>/<download_date YYYY-MM-DD>/<original file name>`; `dataset_id` = manifest id = Bronze table name |
-| B4 | Geometry in Bronze | raw GeoJSON text (parse in Silver) vs parsed `GEOMETRY` column |
-| B5 | Column naming | keep source names vs normalise to snake_case |
-| B6 | Audit columns | source file, file modified time, ingest timestamp, run ID, download date |
-| B7 | Unexpected or bad records | rescued-data column vs fail the load vs quarantine table |
-| B8 | Run logging | ops run-log table vs job logs only |
+| B4 | Geometry in Bronze | **Decided 16 Nov 2026:** keep geometry in its source form: GeoJSON geometry as raw JSON text (one row per feature), GeoParquet WKB as binary, CSV lon/lat as text. Parsed to `GEOMETRY` in Silver (`st_geomfromgeojson` / `st_geomfromwkb`), where invalid or empty shapes are flagged. Reason: Polygon and MultiPolygon coordinates have different nesting depths and cannot share one inferred column. |
+| B5 | Column naming | **Decided 16 Nov 2026:** normalise column names to snake_case at load (values unchanged); original → new names recorded in a data dictionary. Avoids Delta column mapping, which the schools CSV (spaces in names) would otherwise need. |
+| B6 | Audit columns | **Decided 16 Nov 2026:** `_source_file` (`_metadata.file_path`), `_source_file_modified_at` (`_metadata.file_modification_time`), `_download_date` (date folder from the B3 path), `_ingested_at` (`current_timestamp()`), `_run_id` (job run ID passed as a parameter). |
+| B7 | Unexpected or bad records | **Decided 16 Nov 2026:** Bronze lands everything — values that don't fit the schema go to Auto Loader's `_rescued_data`. After each load, row count per source file is reconciled with the manifest's source count; a mismatch fails the job. Validation and quarantine of bad rows happen in Silver. |
+| B8 | Run logging | **Decided 16 Nov 2026:** Delta table `<catalog>.ops.ingestion_runs`, one row per dataset per run: `run_id`, `dataset_id`, start/end time, rows loaded, expected rows (manifest), status, error message. Lakeflow Jobs run history remains for task-level detail. |
 
 ---
 
@@ -210,6 +210,7 @@ feature/<name>  ──PR──►  dev  ──PR──►  main
 | 2026-11-03 | Catalogs, schemas and the landing volume are created by an idempotent SQL script (`setup/01_unity_catalog_setup.sql`), not by the bundle: bundle-managed schemas are dropped with their tables on `bundle destroy`, rename or removal from `databricks.yml`. The bundle (Step 6) manages jobs, pipelines, dashboard and Genie space only. |
 | 2026-11-06 | B3 landing convention: `/Volumes/<catalog>/landing/raw_files/<dataset_id>/<download_date>/<original file name>`. Each download kept; Bronze records the source path. |
 | 2026-11-06 | Feasibility tests passed on Free Edition: (1) Genie Agent (formerly Genie space) answers questions over a UC table using the Serverless Starter Warehouse; (2) service principal `sp-brisbane-housing-prod` (Application ID 6989ab95-54a7-40e4-925a-00d7af94c1e2) created from workspace settings, OAuth secret generated, `GRANT USE CATALOG` on `brisbane_housing_prod` succeeded, and a job ran successfully with Run as = the service principal. Note: the creator gets the Service Principal Manager role only; the Service Principal User role must be granted explicitly before Run as can be set. |
+| 2026-11-16 | Step 0 complete (repo skeleton, pyproject, coding standards, logging helper + tests, GitHub Actions CI, ruleset requiring PR + `lint-and-tests`). B1: Bronze ingestion = PySpark + Auto Loader run as a job task. |
 | 2026-10-06 | Service principals, not personal accounts, own PROD jobs and hold PROD data access; GitHub Actions authenticates as a service principal. To verify on Free Edition in Step 0. |
 | 2026-10-06 | DE Associate exam 20–25 Oct 2026; project work starts after the exam (26 Oct). |
 | 2026-10-06 | Public serving: static GitHub Pages site with filters and weight sliders, plus a CSV download for visitors to use with their own AI tool. No hosted chatbot. |
