@@ -22,8 +22,8 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
-import sys
 import os
+import sys
 
 import pytest
 
