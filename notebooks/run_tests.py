@@ -1,4 +1,11 @@
 # Databricks notebook source
+# /// script
+# [tool.databricks.environment]
+# environment_version = "6"
+# dependencies = [
+#   "pytest==9.2.0",
+# ]
+# ///
 # MAGIC %md
 # MAGIC # Run unit tests on Databricks
 # MAGIC Runs the repo's pytest suite on serverless compute before a PR is opened.
@@ -8,6 +15,10 @@
 # COMMAND ----------
 
 # MAGIC %pip install pytest==9.2.0
+
+# COMMAND ----------
+
+dbutils.library.restartPython()
 
 # COMMAND ----------
 
