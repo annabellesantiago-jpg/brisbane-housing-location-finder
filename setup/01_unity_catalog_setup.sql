@@ -27,6 +27,11 @@ CREATE SCHEMA IF NOT EXISTS brisbane_housing_dev.ops
 CREATE VOLUME IF NOT EXISTS brisbane_housing_dev.landing.raw_files
   COMMENT 'Landing zone: source files uploaded by hand';
 
+-- DEV only: scratch files written by unit tests run from notebooks/run_tests.
+-- Serverless Spark cannot read the notebook's local disk, so tests write here.
+CREATE VOLUME IF NOT EXISTS brisbane_housing_dev.ops.test_files
+  COMMENT 'Temporary files for unit tests; each run deletes its own folder';
+
 -- ---------------------------------------------------------------- PROD -----
 CREATE CATALOG IF NOT EXISTS brisbane_housing_prod
   COMMENT 'Brisbane Housing Location Finder - production environment';
@@ -48,6 +53,7 @@ CREATE VOLUME IF NOT EXISTS brisbane_housing_prod.landing.raw_files
 -- ---------------------------------------------------------------- CHECK ----
 SHOW SCHEMAS IN brisbane_housing_dev;
 SHOW VOLUMES IN brisbane_housing_dev.landing;
+SHOW VOLUMES IN brisbane_housing_dev.ops;
 
 SHOW SCHEMAS IN brisbane_housing_prod;
 SHOW VOLUMES IN brisbane_housing_prod.landing;
