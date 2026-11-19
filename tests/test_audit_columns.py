@@ -16,8 +16,8 @@ def _read_landing_csv(spark, base: Path, date_folder: str):
 
 
 @pytest.mark.spark
-def test_adds_audit_column_values(spark, tmp_path):
-    df = _read_landing_csv(spark, tmp_path, "2026-11-03")
+def test_adds_audit_column_values(spark, test_files_dir):
+    df = _read_landing_csv(spark, test_files_dir, "2026-11-03")
 
     rows = add_audit_columns(df, run_id="run-123").collect()
 
@@ -31,8 +31,8 @@ def test_adds_audit_column_values(spark, tmp_path):
 
 
 @pytest.mark.spark
-def test_keeps_original_columns_and_rows(spark, tmp_path):
-    df = _read_landing_csv(spark, tmp_path, "2026-11-03")
+def test_keeps_original_columns_and_rows(spark, test_files_dir):
+    df = _read_landing_csv(spark, test_files_dir, "2026-11-03")
 
     result = add_audit_columns(df, run_id="run-123")
 
@@ -50,8 +50,8 @@ def test_keeps_original_columns_and_rows(spark, tmp_path):
 
 @pytest.mark.spark
 @pytest.mark.parametrize("date_folder", ["no-date", "2026-13-45", "2026-1-3"])
-def test_fails_when_date_folder_is_not_a_date(spark, tmp_path, date_folder):
-    df = _read_landing_csv(spark, tmp_path, date_folder)
+def test_fails_when_date_folder_is_not_a_date(spark, test_files_dir, date_folder):
+    df = _read_landing_csv(spark, test_files_dir, date_folder)
 
     with pytest.raises(SparkRuntimeException, match="No valid date folder in the landing path"):
         add_audit_columns(df, run_id="run-123").collect()

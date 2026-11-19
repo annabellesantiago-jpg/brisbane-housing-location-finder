@@ -19,6 +19,10 @@ import pytest
 # Tell tests/conftest.py to use this notebook's Spark session.
 os.environ["BHF_TEST_SPARK"] = "databricks"
 
+# Tests that write files for Spark to read put them in this DEV volume
+# (serverless Spark cannot read the notebook's local disk).
+os.environ["BHF_TEST_FILES_ROOT"] = "/Volumes/brisbane_housing_dev/ops/test_files"
+
 # Do not write .pyc files into the Git folder.
 sys.dont_write_bytecode = True
 
